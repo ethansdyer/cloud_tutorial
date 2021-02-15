@@ -12,11 +12,9 @@ from absl import app
 from absl import flags
 from absl import logging
 
-from oauth2client.client import GoogleCredentials
 from googleapiclient import discovery
 from googleapiclient import errors
 from google.cloud import storage
-
 from setuptools.sandbox import run_setup
 
 # Structure from:
@@ -26,14 +24,11 @@ from setuptools.sandbox import run_setup
 FLAGS = flags.FLAGS
 
 # Configuration:
-flags.DEFINE_string('job_name',  'MNIST_Classifier',
+flags.DEFINE_string('job_name', 'MNIST_Classifier',
                     'A simple fully connected MNIST classifier.')
-flags.DEFINE_string('region',  'us-west1',
-                    'GCE region.')
-flags.DEFINE_string('project_id',  None,
-                    'GCE project id.')
-flags.DEFINE_string('bucket',  None,
-                    'Path to staging bucket.')
+flags.DEFINE_string('region', 'us-west1', 'GCE region.')
+flags.DEFINE_string('project_id', None, 'GCE project id.')
+flags.DEFINE_string('bucket', None, 'Path to staging bucket.')
 
 
 def package_and_upload():
@@ -84,17 +79,17 @@ def submit_job(package_uris):
   DATA_PATH = os.path.join('gs://', BUCKET, 'data/mnist.npz')
   PACKAGE_URIS = package_uris
 
-  training_inputs = {'packageUris': PACKAGE_URIS,
-    'pythonModule': 'cloudssifier.train',
-    'args': ['--data_path', DATA_PATH],
-    'region': REGION,
-    'jobDir': JOB_DIR,
-    'scaleTier': 'CUSTOM',
-    'masterType': 'standard_p100',
-    'runtimeVersion': '1.12',
-    'pythonVersion': '3.5',
-    }
-
+  training_inputs = {
+      'packageUris': PACKAGE_URIS,
+      'pythonModule': 'cloudssifier.train',
+      'args': ['--data_path', DATA_PATH],
+      'region': REGION,
+      'jobDir': JOB_DIR,
+      'scaleTier': 'CUSTOM',
+      'masterType': 'standard_p100',
+      'runtimeVersion': '1.12',
+      'pythonVersion': '3.5',
+  }
 
   job_spec = {'jobId': JOB_NAME, 'trainingInput': training_inputs}
 
@@ -111,20 +106,23 @@ def submit_job(package_uris):
   try:
     response = request.execute()
     logging.info(response)
-    print('\nTo stream logs run: gcloud ai-platform jobs stream-logs %s\n'
-          % JOB_NAME)
+    print('\nTo stream logs run: gcloud ai-platform jobs stream-logs %s\n' %
+          JOB_NAME)
   except errors.HttpError as err:
     # Something went wrong, print out some information.
     logging.error('There was an error creating the model. Check the details:')
     logging.error(err._get_reason())
 
+
 def main(argv):
   logging.info('Running main.')
+
   if len(argv) > 1:
     raise app.UsageError('Too many command-line arguments.')
-  else:
-    package_uris = package_and_upload()
-    submit_job(package_uris)
+
+  package_uris = package_and_upload()
+  submit_job(package_uris)
+
 
 if __name__ == '__main__':
   flags.mark_flag_as_required('project_id')
